@@ -42,6 +42,7 @@ class _CompletedTaskScreenState extends State<CompletedTaskScreen> {
                 onUpdateTask: () {
                   _getCompletedTasks();
                 },
+                statusColour: Colors.green,
               );
             },
           ),
@@ -63,7 +64,7 @@ class _CompletedTaskScreenState extends State<CompletedTaskScreen> {
     } else {
       if (mounted) {
         showSnackBarMessage(
-            context, response.errorMessage ?? 'Get new task failed! Try again');
+            context, response.errorMessage ?? 'Get Completed task failed! Try again');
       }
     }
     _getCompletedTasksInProgress = false;

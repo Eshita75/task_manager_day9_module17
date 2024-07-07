@@ -9,11 +9,12 @@ import 'centered_progress_indicator.dart';
 
 class TaskItem extends StatefulWidget {
   const TaskItem({
-    super.key, required this.taskModel, required this.onUpdateTask,
+    super.key, required this.taskModel, required this.onUpdateTask, required this.statusColour,
   });
 
   final TaskModel taskModel;
   final VoidCallback onUpdateTask;
+  final Color statusColour;
 
   @override
   State<TaskItem> createState() => _TaskItemState();
@@ -21,7 +22,7 @@ class TaskItem extends StatefulWidget {
 
 class _TaskItemState extends State<TaskItem> {
   bool _deleteInProgress = false;
-  bool _editInProgress = false;
+  bool _editStatusInProgress = false;
   String dropdownValue = '';
   List<String> statusList = [
     'New',
@@ -35,7 +36,6 @@ class _TaskItemState extends State<TaskItem> {
     super.initState();
     dropdownValue = widget.taskModel.status!;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +58,7 @@ class _TaskItemState extends State<TaskItem> {
               //mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Chip(
-                  //backgroundColor: Colors.blue,
+                  backgroundColor: widget.statusColour,
                   label:  Text(widget.taskModel.status ?? 'New'),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),),
@@ -74,15 +74,15 @@ class _TaskItemState extends State<TaskItem> {
                       replacement: const CenteredProgressIndicator(),
                       child: IconButton(onPressed: (){
                         _deleteTask();
-                      }, icon: const Icon(Icons.delete)),
+                      }, icon: const Icon(Icons.delete, color: Colors.red,)),
                     ),
 
 
                     Visibility(
-                      visible: _editInProgress == false,
+                      visible: _editStatusInProgress == false,
                       replacement: const CenteredProgressIndicator(),
                       child: PopupMenuButton<String>(
-                        icon: const Icon(Icons.edit),
+                        icon: const Icon(Icons.edit, color: Colors.green,),
                         onSelected: (String selectedValue) {
                           dropdownValue = selectedValue;
                           if (mounted) {
@@ -96,7 +96,7 @@ class _TaskItemState extends State<TaskItem> {
                               child: ListTile(
                                 title: Text(value),
                                 trailing: dropdownValue == value
-                                    ? const Icon(Icons.done)
+                                    ? statusChange()
                                     : null,
                               ),
                             );
@@ -138,14 +138,31 @@ class _TaskItemState extends State<TaskItem> {
   }
 
 
+  statusChange(){
+    if(dropdownValue == 'Progress'){
+      _progressTaskStatus();
+      _cancelledTaskStatus();
+      _completedTaskStatus();
+    }
 
-  Future<void> _updateTask() async {
-    _editInProgress = true;
+    if(dropdownValue == 'Cancelled'){
+      _cancelledTaskStatus();
+    }
+
+    if(dropdownValue == 'Completed'){
+      _completedTaskStatus();
+    }
+  }
+
+
+
+  Future<void> _progressTaskStatus() async {
+    _editStatusInProgress = true;
     if (mounted) {
       setState(() {});
     }
     NetworkResponse response =
-    await NetworkCaller.getRequest(Urls.updateTaskStatus(widget.taskModel.sId!, widget.taskModel.status!));
+    await NetworkCaller.getRequest(Urls.progressTaskStatus(widget.taskModel.sId!));
     if (response.isSuccess) {
       widget.onUpdateTask();
     } else {
@@ -156,7 +173,53 @@ class _TaskItemState extends State<TaskItem> {
         );
       }
     }
-    _editInProgress = false;
+    _editStatusInProgress = false;
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _cancelledTaskStatus() async {
+    _editStatusInProgress = true;
+    if (mounted) {
+      setState(() {});
+    }
+    NetworkResponse response =
+    await NetworkCaller.getRequest(Urls.cancelledTaskStatus(widget.taskModel.sId!));
+    if (response.isSuccess) {
+      widget.onUpdateTask();
+    } else {
+      if (mounted) {
+        showSnackBarMessage(
+          context,
+          response.errorMessage ?? 'Get task count by status failed! Try again',
+        );
+      }
+    }
+    _editStatusInProgress = false;
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _completedTaskStatus() async {
+    _editStatusInProgress = true;
+    if (mounted) {
+      setState(() {});
+    }
+    NetworkResponse response =
+    await NetworkCaller.getRequest(Urls.completedTaskStatus(widget.taskModel.sId!));
+    if (response.isSuccess) {
+      widget.onUpdateTask();
+    } else {
+      if (mounted) {
+        showSnackBarMessage(
+          context,
+          response.errorMessage ?? 'Get task count by status failed! Try again',
+        );
+      }
+    }
+    _editStatusInProgress = false;
     if (mounted) {
       setState(() {});
     }

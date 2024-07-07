@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:task_manager_day9_module17/ui/controller/auth_controller.dart';
 import 'package:task_manager_day9_module17/ui/screens/update_profile_screen.dart';
@@ -23,12 +25,15 @@ AppBar ProfileAppBar(context, [bool fromUpdateProfile = false]) {
           ),
         );
       },
-      child: const Padding(
+      child:  Padding(
         padding: EdgeInsets.all(8.0),
         child: CircleAvatar(
-          // child: NetworkCachedImage(
-          //   //url: 'https://whipped.in/cdn/shop/files/pink-butterfly-cake_1800x1800.png?v=1686848832',fit: BoxFit.cover,
-          // ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(50),
+            child: Image.memory(
+              base64Decode(AuthController.userData?.photo ?? ''),
+            ),
+          ),
         ),
       ),
     ),

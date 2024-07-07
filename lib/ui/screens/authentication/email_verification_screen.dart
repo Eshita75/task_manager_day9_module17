@@ -2,8 +2,13 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:task_manager_day9_module17/ui/screens/authentication/pin_verification_screen.dart';
 
+import '../../../data/models/network_response.dart';
+import '../../../data/network_caller/network_caller.dart';
+import '../../../data/utility/urls.dart';
 import '../../utility/app_colors.dart';
+import '../../utility/app_constants.dart';
 import '../../widgets/background_widget.dart';
+import '../../widgets/show_snack_bar_message.dart';
 
 
 class EmailVerificationScreen extends StatefulWidget {
@@ -15,6 +20,8 @@ class EmailVerificationScreen extends StatefulWidget {
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   final TextEditingController _emailTEController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey();
+  bool _mailVerificationInProgress = false;
 
   @override
   Widget build(BuildContext context) {
@@ -32,22 +39,32 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   Text('A 6 digit verification pin will send to your email address',
                     style: Theme.of(context).textTheme.titleSmall,),
 
-                  SizedBox(height: 24,),
+                  const SizedBox(height: 24,),
 
                   TextFormField(
                     keyboardType: TextInputType.emailAddress,
                     controller: _emailTEController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'Email'
                     ),
+                    validator: (String? value){
+                      if(value?.trim().isEmpty ?? true){
+                        return 'Enter your email address';
+                      }
+                      if (AppConstants.emailRegExp.hasMatch(value!) ==
+                          false) {
+                        return 'Enter a valid email address';
+                      }
+                      return null;
+                    },
                   ),
 
-                  SizedBox(height: 16,),
+                  const SizedBox(height: 16,),
 
-                  ElevatedButton(onPressed: _onTapConfirmButton,
+                  ElevatedButton(onPressed: _mailVerification,
                     child: Icon(Icons.arrow_circle_right_outlined),),
 
-                  SizedBox(height: 36,),
+                  const SizedBox(height: 36,),
 
                   Center(
                     child: RichText(text: TextSpan(
@@ -83,16 +100,41 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     Navigator.pop(context);
   }
 
-  _onTapConfirmButton() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) {
-          return PinVerificationScreen();
-        },
-      ),
-    );
+  Future<void> _mailVerification() async{
+    _mailVerificationInProgress = true;
+    if(mounted){
+      setState(() {});
+    }
+
+    // Map<String, dynamic> requestData = {
+    //   "email":_emailTEController.text.trim(),
+    // };
+
+    NetworkResponse response = await NetworkCaller.getRequest(Urls.mailVerification(_emailTEController.text.trim()));//NetworkResponse class er object create korci first then NetworkCaller k call korci
+
+    _mailVerificationInProgress = false;
+    if(mounted){
+      setState(() {});
+    }
+
+    if (response.isSuccess) {
+      if(mounted){
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return const PinVerificationScreen();
+            },
+          ),
+        );
+      }
+    }else{
+      if(mounted){
+        showSnackBarMessage(context, response.errorMessage ?? 'Email/password is not correct. Try again');
+      }
+    }
   }
+
 
   @override
   void dispose() {

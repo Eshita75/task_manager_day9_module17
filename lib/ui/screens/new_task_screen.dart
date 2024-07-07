@@ -10,8 +10,10 @@ import 'package:task_manager_day9_module17/ui/widgets/centered_progress_indicato
 import '../../data/models/task_count_by_status_model.dart';
 import '../../data/models/task_model.dart';
 import '../widgets/show_snack_bar_message.dart';
+//import '../widgets/task_item.dart';
 import '../widgets/task_item.dart';
 import '../widgets/task_summary_card.dart';
+
 
 class NewTaskScreen extends StatefulWidget {
   const NewTaskScreen({super.key});
@@ -63,7 +65,7 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
                       onUpdateTask: () {
                         _getTaskCountByStatus();
                         _getNewTasks();
-                      },
+                      }, statusColour: Colors.blue,
                     );
                   },
                 ),
