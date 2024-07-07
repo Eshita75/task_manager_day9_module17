@@ -1,7 +1,7 @@
+import 'package:email_otp/email_otp.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:task_manager_day9_module17/ui/screens/authentication/pin_verification_screen.dart';
-
 import '../../../data/models/network_response.dart';
 import '../../../data/network_caller/network_caller.dart';
 import '../../../data/utility/urls.dart';
@@ -106,10 +106,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       setState(() {});
     }
 
-    // Map<String, dynamic> requestData = {
-    //   "email":_emailTEController.text.trim(),
-    // };
-
     NetworkResponse response = await NetworkCaller.getRequest(Urls.mailVerification(_emailTEController.text.trim()));//NetworkResponse class er object create korci first then NetworkCaller k call korci
 
     _mailVerificationInProgress = false;
@@ -118,8 +114,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     }
 
     if (response.isSuccess) {
+      EmailOTP.sendOTP(email: _emailTEController.text);
       if(mounted){
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) {

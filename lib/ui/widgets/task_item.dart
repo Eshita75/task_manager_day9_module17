@@ -85,6 +85,7 @@ class _TaskItemState extends State<TaskItem> {
                         icon: const Icon(Icons.edit, color: Colors.green,),
                         onSelected: (String selectedValue) {
                           dropdownValue = selectedValue;
+                          _updateTaskStatus(dropdownValue);
                           if (mounted) {
                             setState(() {});
                           }
@@ -96,7 +97,7 @@ class _TaskItemState extends State<TaskItem> {
                               child: ListTile(
                                 title: Text(value),
                                 trailing: dropdownValue == value
-                                    ? statusChange()
+                                    ? Icon(Icons.done)
                                     : null,
                               ),
                             );
@@ -138,77 +139,13 @@ class _TaskItemState extends State<TaskItem> {
   }
 
 
-  statusChange(){
-    if(dropdownValue == 'Progress'){
-      _progressTaskStatus();
-      _cancelledTaskStatus();
-      _completedTaskStatus();
-    }
-
-    if(dropdownValue == 'Cancelled'){
-      _cancelledTaskStatus();
-    }
-
-    if(dropdownValue == 'Completed'){
-      _completedTaskStatus();
-    }
-  }
-
-
-
-  Future<void> _progressTaskStatus() async {
+  Future<void> _updateTaskStatus(String value) async {
     _editStatusInProgress = true;
     if (mounted) {
       setState(() {});
     }
     NetworkResponse response =
-    await NetworkCaller.getRequest(Urls.progressTaskStatus(widget.taskModel.sId!));
-    if (response.isSuccess) {
-      widget.onUpdateTask();
-    } else {
-      if (mounted) {
-        showSnackBarMessage(
-          context,
-          response.errorMessage ?? 'Get task count by status failed! Try again',
-        );
-      }
-    }
-    _editStatusInProgress = false;
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  Future<void> _cancelledTaskStatus() async {
-    _editStatusInProgress = true;
-    if (mounted) {
-      setState(() {});
-    }
-    NetworkResponse response =
-    await NetworkCaller.getRequest(Urls.cancelledTaskStatus(widget.taskModel.sId!));
-    if (response.isSuccess) {
-      widget.onUpdateTask();
-    } else {
-      if (mounted) {
-        showSnackBarMessage(
-          context,
-          response.errorMessage ?? 'Get task count by status failed! Try again',
-        );
-      }
-    }
-    _editStatusInProgress = false;
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  Future<void> _completedTaskStatus() async {
-    _editStatusInProgress = true;
-    if (mounted) {
-      setState(() {});
-    }
-    NetworkResponse response =
-    await NetworkCaller.getRequest(Urls.completedTaskStatus(widget.taskModel.sId!));
+    await NetworkCaller.getRequest(Urls.progressTaskStatus(widget.taskModel.sId!, value));
     if (response.isSuccess) {
       widget.onUpdateTask();
     } else {

@@ -6,14 +6,16 @@ import 'package:task_manager_day9_module17/ui/screens/authentication/reset_passw
 import 'package:task_manager_day9_module17/ui/screens/authentication/sign_in_screen.dart';
 import 'package:task_manager_day9_module17/ui/utility/app_colors.dart';
 import 'package:task_manager_day9_module17/ui/widgets/background_widget.dart';
+import 'package:task_manager_day9_module17/ui/widgets/centered_progress_indicator.dart';
 
 import '../../../data/models/network_response.dart';
 import '../../../data/network_caller/network_caller.dart';
 import '../../../data/utility/urls.dart';
+import '../../widgets/show_snack_bar_message.dart';
 
 
 class PinVerificationScreen extends StatefulWidget {
-  const PinVerificationScreen({super.key});
+  const PinVerificationScreen({super.key,});
 
   @override
   State<PinVerificationScreen> createState() => _PinVerificationScreenState();
@@ -22,6 +24,7 @@ class PinVerificationScreen extends StatefulWidget {
 class _PinVerificationScreenState extends State<PinVerificationScreen> {
   final TextEditingController _pinTEController = TextEditingController();
   bool _getPinVerificationInProgress = false;
+  final GlobalKey<FormState> _formKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -31,27 +34,34 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 120,),
-                  Text('Pin Verification', style: Theme.of(context).textTheme.titleLarge,),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 120,),
+                    Text('Pin Verification', style: Theme.of(context).textTheme.titleLarge,),
 
-                  Text('A 6 digit verification pin has been sent to your email address',
-                    style: Theme.of(context).textTheme.titleSmall,),
+                    Text('A 6 digit verification pin has been sent to your email address',
+                      style: Theme.of(context).textTheme.titleSmall,),
 
-                  SizedBox(height: 24,),
+                    const SizedBox(height: 24,),
 
-                  _buildPinCodeTextField(),
-                  SizedBox(height: 16,),
+                    _buildPinCodeTextField(),
+                    const SizedBox(height: 16,),
 
-                  ElevatedButton(onPressed: _onTapVerifyButton,
-                    child: const Text('Verify'),),
+                    Visibility(
+                      visible: _getPinVerificationInProgress == false,
+                      replacement: const CenteredProgressIndicator(),
+                      child: ElevatedButton(onPressed: _pinVerification,
+                        child: const Text('Verify'),),
+                    ),
 
-                  const SizedBox(height: 36,),
+                    const SizedBox(height: 36,),
 
-                  _buildBackToSignInSection()
-                ],
+                    _buildBackToSignInSection()
+                  ],
+                ),
               ),
             ),
           ),
@@ -72,7 +82,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                       children: [
                         TextSpan(
                           text: 'Sign in',
-                          style: TextStyle(color: AppColors.themeColor),
+                          style: const TextStyle(color: AppColors.themeColor),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
                               _onTapSignInButton();
@@ -86,7 +96,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
 
   Widget _buildPinCodeTextField() {
     return PinCodeTextField(
-                    animationType: AnimationType.fade,
+        animationType: AnimationType.fade,
                     pinTheme: PinTheme(
                         shape: PinCodeFieldShape.box,
                         borderRadius: BorderRadius.circular(5),
@@ -114,8 +124,10 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
     // Map<String, dynamic> requestData = {
     //   "email":_emailTEController.text.trim(),
     // };
-
-    NetworkResponse response = await NetworkCaller.getRequest(Urls.otpVerification(AuthController.getUserData, _pinTEController.text.trim()));//NetworkResponse class er object create korci first then NetworkCaller k call korci
+    final userData = AuthController.userData!;
+    String mail = userData.email ?? '';
+    print(mail);
+    NetworkResponse response = await NetworkCaller.getRequest(Urls.otpVerification(mail, _pinTEController.text));//NetworkResponse class er object create korci first then NetworkCaller k call korci
 
     _getPinVerificationInProgress = false;
     if(mounted){
@@ -123,19 +135,18 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
     }
 
     if (response.isSuccess) {
+      clear();
       if(mounted){
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) {
-              return const PinVerificationScreen();
-            },
+              builder: (context) => const ResetPasswordScreen()
           ),
         );
       }
     }else{
       if(mounted){
-        showSnackBarMessage(context, response.errorMessage ?? 'Email/password is not correct. Try again');
+        showSnackBarMessage(context, response.errorMessage ?? 'otp is not correct. Try again');
       }
     }
   }
@@ -145,13 +156,8 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
         (route) => false);
   }
 
-  _onTapVerifyButton() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const ResetPasswordScreen()
-      ),
-    );
+  clear(){
+    _pinTEController.clear();
   }
 
   @override
